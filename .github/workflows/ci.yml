@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DATABASE_URL: "mysql://fake:fake@fake/fake"
+  NEXTAUTH_SECRET: "fake"
+  NEXTAUTH_URL: "http://fake.com"
+  DISCORD_CLIENT_ID: "fake"
+  DISCORD_CLIENT_SECRET: "fake"
+  EDAMAM_APP_ID: "fake"
+  EDAMAM_API_KEY: "fake"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run linter
+        run: yarn lint
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run typecheck
+        run: yarn typecheck

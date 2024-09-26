@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+enum Objective {
+    LOSE_FAT
+    GAIN_MUSCLE
+    MAINTAIN_WEIGHT
+    UNSET
+}
+
+enum Color {
+    BLUE
+    GREEN
+    RED
+    EASTEREGG
+    UNSET
+}
+
+// Necessary for Next auth
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String? // @db.Text
+    access_token      String? // @db.Text
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String? // @db.Text
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id                  String          @id @default(cuid())
+    name                String?
+    email               String?         @unique
+    emailVerified       DateTime?
+    image               String?
+    accounts            Account[]
+    sessions            Session[]
+    heightInCentimeters Int             @default(0)
+    age                 Int             @default(0)
+    objective           Objective       @default(UNSET)
+    weightHistory       WeightHistory[]
+    mate                Mate?
+    BlackList           BlackList[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+// DB Schema
+model FoodItem {
+    id           String   @id @default(cuid())
+    api_id       String
+    blacklist_id String
+    created_at   DateTime @default(now())
+    updated_at   DateTime @updatedAt
+}
+
+model BlackList {
+    id           String   @id @default(cuid())
+    created_at   DateTime @default(now())
+    updated_at   DateTime @updatedAt
+    userId       String
+    related_user User     @relation(fields: [userId], references: [id])
+    food         String
+}
+
+model WeightHistory {
+    id           String   @id @default(cuid())
+    userId       String
+    related_user User     @relation(fields: [userId], references: [id])
+    weight       Float
+    created_at   DateTime @default(now())
+    updated_at   DateTime @updatedAt
+}
+
+model Mate {
+    id           String   @id @default(cuid())
+    userId       String   @unique
+    related_user User     @relation(fields: [userId], references: [id])
+    level        Int
+    color        Color    @default(UNSET)
+    created_at   DateTime @default(now())
+    updated_at   DateTime @updatedAt
+}
